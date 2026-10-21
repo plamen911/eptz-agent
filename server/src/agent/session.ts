@@ -64,12 +64,13 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
   const guard: HookCallback = async (input) => {
     if (input.hook_event_name !== "PreToolUse") return {};
     const verdict = checkTool(input.tool_name, (input.tool_input ?? {}) as Record<string, unknown>, roots);
-    if (verdict.decision === "allow") return {};
+    // The guard decides every call: allow (Bash still runs inside the sandbox), deny, or ask the
+    // expert through canUseTool. Leaving "allow" undecided would send ordinary calls to the expert.
     return {
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
         permissionDecision: verdict.decision,
-        permissionDecisionReason: verdict.reason,
+        permissionDecisionReason: verdict.decision === "allow" ? "allowed by the app's guard" : verdict.reason,
       },
     };
   };
