@@ -14,6 +14,7 @@
     "test": "npm test --workspaces",
     "vendor:plugin": "bash scripts/vendor-plugin.sh",
     "case": "npm run case --workspace server --",
-    "turn": "npm run turn --workspace server --"
+    "turn": "npm run turn --workspace server --",
+    "check:plugin": "npm run check:plugin --workspace server"
   }
 }

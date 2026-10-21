@@ -31,6 +31,15 @@ photos ──► reader (Claude Haiku 5.5) ──► case_ingest.md + handwritte
   `plugin.lock`, and `skills: ["fire-service:eptz"]` makes the ЕПТЗ skill the only one the agent
   can invoke. A short own system prompt replaces Claude Code's; no user or project settings load.
 
+## Keeping up with the skill
+
+The methodology lives in the fire-service plugin, which keeps improving. Every hour the
+`sync-plugin` workflow checks the plugin's main branch; when it moved, it vendors the new commit,
+runs the type check, the tests and `npm run check:plugin` (the agent starts and must load the plugin
+at the pinned version with the eptz skill), and commits the new `plugin.lock`. A plugin change that
+would break the app fails there and never reaches it. `npm run vendor:plugin` brings a running copy
+to the pinned commit.
+
 ## Safety
 
 - **Bash runs in the OS sandbox** (bubblewrap on Linux): it writes only in the case folder and

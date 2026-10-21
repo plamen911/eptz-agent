@@ -1,0 +1,40 @@
+name: sync-plugin
+
+# Every change to the fire-service plugin reaches the app: each hour this checks the plugin's main
+# branch, and when it moved, vendors the new commit, runs the checks and commits plugin.lock.
+# A plugin change that breaks the app fails here and is not committed.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-plugin
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get install -y -q bubblewrap socat
+      - id: update
+        run: echo "result=$(bash scripts/update-plugin.sh)" >> "$GITHUB_OUTPUT"
+      - if: startsWith(steps.update.outputs.result, 'updated')
+        run: npm ci
+      - if: startsWith(steps.update.outputs.result, 'updated')
+        run: npm run typecheck && npm test && npm run check:plugin
+      - if: startsWith(steps.update.outputs.result, 'updated')
+        run: |
+          git config user.name "Plamen Markov"
+          git config user.email "plamen@lynxlake.org"
+          git add plugin.lock
+          git commit -m "fire-service plugin: ${{ steps.update.outputs.result }}"
+          git push
