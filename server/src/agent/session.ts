@@ -122,12 +122,24 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
   };
 }
 
-/** One case, one conversation with the agent. */
-export function startCase(config: Config, caseId: string, log: CostLog, hooks: SessionHooks): CaseSession {
+/**
+ * One case, one conversation with the agent. `resume` continues a saved session (the SDK keeps the
+ * transcript), so a case can span several processes – a request per turn on the server, or the
+ * terminal runner exiting between answers.
+ */
+export function startCase(
+  config: Config,
+  caseId: string,
+  log: CostLog,
+  hooks: SessionHooks,
+  resume?: string,
+): CaseSession {
   const roots: Roots = { plugin: config.PLUGIN_DIR, caseDir: join(config.RUNS_DIR, caseId) };
   const inbox = new Inbox();
   const started = Date.now();
-  const stream = query({ prompt: inbox, options: caseOptions(config, roots, hooks) });
+  const options = caseOptions(config, roots, hooks);
+  if (resume) options.resume = resume;
+  const stream = query({ prompt: inbox, options });
 
   const done = (async () => {
     for await (const message of stream) {
