@@ -1,6 +1,24 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { systemPrompt } from "../src/agent/prompt.js";
 import { caseOptions, PASSED_ENV } from "../src/agent/session.js";
 import type { Config } from "../src/config.js";
+
+/** A minimal plugin with the files the system prompt takes from the eptz skill. */
+function fakePlugin(): string {
+  const root = mkdtempSync(join(tmpdir(), "plugin-"));
+  const skill = join(root, "skills/eptz");
+  for (const dir of ["assets", "references", "scripts"]) mkdirSync(join(skill, dir), { recursive: true });
+  writeFileSync(join(skill, "assets/report_template.md"), "ШАБЛОН НА ДОКЛАДА");
+  writeFileSync(join(skill, "assets/eptz_meta.example.json"), '{"zm_no": "123/2026"}');
+  writeFileSync(join(skill, "references/sources.md"), "ИЗТОЧНИЦИ");
+  writeFileSync(join(skill, "references/pregled.md"), "ПРЕГЛЕД");
+  writeFileSync(join(skill, "scripts/build_smetka.py"), '#!/usr/bin/env python3\n"""\nПОЛЕТА НА СМЕТКАТА\n"""\nimport json\n');
+  return root;
+}
+const plugin = fakePlugin();
 
 const config: Config = {
   ANTHROPIC_API_KEY: "test",
@@ -8,11 +26,11 @@ const config: Config = {
   READER_MODEL: "claude-haiku-5-5",
   WRITER_MODEL: "claude-sonnet-5-5",
   WRITER_FALLBACK_MODEL: "claude-sonnet-5",
-  PLUGIN_DIR: "/app/vendor/fire-service",
+  PLUGIN_DIR: plugin,
   RUNS_DIR: "/app/runs",
   SANDBOX: "on",
 };
-const roots = { plugin: "/app/vendor/fire-service", caseDir: "/app/runs/case-1" };
+const roots = { plugin, caseDir: "/app/runs/case-1" };
 const hooks = { onMessage: () => {}, approve: async () => false };
 
 describe("caseOptions", () => {
@@ -48,5 +66,12 @@ describe("caseOptions", () => {
     expect(Object.keys(options.env ?? {}).every((k) => ["ANTHROPIC_API_KEY", ...PASSED_ENV].includes(k))).toBe(true);
     expect(options.strictMcpConfig).toBe(true);
     expect(options.mcpServers).toEqual({});
+  });
+
+  it("puts the skill files read in every case into the cached system prompt, from the vendored plugin", () => {
+    const prompt = systemPrompt(roots);
+    for (const text of ["ШАБЛОН НА ДОКЛАДА", "ИЗТОЧНИЦИ", "ПРЕГЛЕД", '"zm_no"', "ПОЛЕТА НА СМЕТКАТА"]) expect(prompt).toContain(text);
+    expect(prompt).not.toContain("import json"); // the fields of smetka.json, not the script
+    expect(options.settings).toEqual({ promptCacheTtl: "1h" });
   });
 });
