@@ -4,7 +4,7 @@ dist/
 # the fire-service plugin is fetched by scripts/vendor-plugin.sh at the ref in plugin.lock
 vendor/
 # case files carry personal data – they never go into git
-cases/
-runs/
+/cases/
+/runs/
 *.log
 .DS_Store
