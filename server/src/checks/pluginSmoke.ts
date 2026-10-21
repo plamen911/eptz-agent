@@ -5,7 +5,7 @@
  *
  *   npm run check:plugin
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { caseOptions } from "../agent/session.js";
@@ -32,6 +32,8 @@ const config: Config = {
   SANDBOX: "on",
 };
 const roots = { plugin: config.PLUGIN_DIR, caseDir: join(config.RUNS_DIR, "smoke") };
+// the agent starts in the case folder – a missing one fails the launch (reported as a binary problem)
+mkdirSync(roots.caseDir, { recursive: true });
 const options = caseOptions(config, roots, { onMessage() {}, approve: async () => false });
 const abort = new AbortController();
 options.abortController = abort;
