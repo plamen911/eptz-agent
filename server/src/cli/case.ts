@@ -1,29 +1,37 @@
 /**
  * The agent in the terminal – step 0/1 of the plan, before the web app.
  *
- *   npm run case -- <folder with photos> [--case ID] [--reuse]
+ *   npm run case -- <folder with photos> [--case ID] [--reuse] [--inbox FILE]
  *
  * Reads every photo with the reader model, writes runs/<ID>/case_ingest.md, then opens a
  * conversation with the writer agent. Type your answers; an empty line or "край" ends it.
  * --reuse skips the reading when runs/<ID>/case_ingest.md already exists.
+ * --inbox reads the answers from lines appended to FILE instead of the terminal, so the agent can
+ *   run in the background (output to a log file) until the web app exists.
  */
 import { existsSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
 import { startCase } from "../agent/session.js";
 import { loadConfig, ROOT } from "../config.js";
 import { CostLog } from "../costLog.js";
 import { readFolder } from "../transcribe/folder.js";
+import { fileInput, terminalInput } from "./input.js";
 
 function args(argv: string[]) {
   const rest = argv.slice(2);
-  const folder = rest.find((a) => !a.startsWith("--"));
-  const caseFlag = rest.indexOf("--case");
+  const value = (flag: string) => {
+    const at = rest.indexOf(flag);
+    return at >= 0 ? rest[at + 1] : undefined;
+  };
+  const caseId = value("--case");
+  const inbox = value("--inbox");
+  const folder = rest.find((a, i) => !a.startsWith("--") && !["--case", "--inbox"].includes(rest[i - 1] ?? ""));
   return {
     folder: folder ? resolve(folder) : undefined,
-    caseId: caseFlag >= 0 ? rest[caseFlag + 1] : undefined,
+    caseId,
+    inbox: inbox ? resolve(inbox) : undefined,
     reuse: rest.includes("--reuse"),
   };
 }
@@ -47,7 +55,7 @@ async function main() {
   const envFile = join(ROOT, ".env");
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const config = loadConfig();
-  const { folder, caseId: given, reuse } = args(process.argv);
+  const { folder, caseId: given, reuse, inbox } = args(process.argv);
   const caseId = given ?? new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
   const caseDir = join(config.RUNS_DIR, caseId);
   mkdirSync(join(caseDir, "out"), { recursive: true });
@@ -63,19 +71,32 @@ async function main() {
     process.stdout.write(` – ${((Date.now() - started) / 1000).toFixed(0)} s\n`);
   }
 
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const input = inbox ? fileInput(inbox) : terminalInput();
+  // one reader of the input: a line answers a pending approval, or goes to the agent
+  let pendingApproval: ((answer: string) => void) | undefined;
   const session = startCase(config, caseId, log, {
     onMessage: print,
-    approve: async (action, detail) =>
-      /^(да|y)/i.test(await rl.question(`\n\nОдобрявате ли: ${action}?\n  ${detail}\n[да/не] `)),
+    approve: (action, detail) => {
+      process.stdout.write(`\n\nОдобрявате ли: ${action}?\n  ${detail}\n[да/не] `);
+      return new Promise<boolean>((resolve) => {
+        pendingApproval = (answer) => resolve(/^(да|y)/i.test(answer));
+      });
+    },
   });
 
   session.send(
     "Изготви ЕПТЗ по материалите в case_ingest.md. Започни с проверката на материалите и числата, писани на ръка.",
   );
-  void session.done.then(() => rl.close());
+  void session.done.then(() => input.close());
   for (;;) {
-    const line = (await rl.question("")).trim();
+    const line = (await input.next())?.trim();
+    if (line === undefined) break;
+    if (pendingApproval) {
+      const answer = pendingApproval;
+      pendingApproval = undefined;
+      answer(line);
+      continue;
+    }
     if (line === "" || line === "край") break;
     session.send(line);
   }
