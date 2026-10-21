@@ -3,6 +3,7 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { demoEngine } from "../cases/demoEngine.js";
 import { claudeEngine } from "../cases/engine.js";
 import { CaseManager } from "../cases/manager.js";
 import { loadConfig, ROOT } from "../config.js";
@@ -26,12 +27,14 @@ const lock = Object.fromEntries(
 ) as Record<string, string>;
 
 const log = new CostLog(join(config.RUNS_DIR, "costs.jsonl"));
-const manager = new CaseManager(config, claudeEngine(config, log), log);
+const manager = new CaseManager(config, config.ENGINE === "demo" ? demoEngine() : claudeEngine(config, log), log);
 const app = await buildApp({
   manager,
   ...(config.APP_TOKEN ? { token: config.APP_TOKEN } : {}),
   plugin: { version: lock.version ?? "?", ref: lock.ref ?? "?" },
   logger: true,
+  // the web app, when it has been built (npm run build)
+  ...(existsSync(join(ROOT, "web/dist/index.html")) ? { webDir: join(ROOT, "web/dist") } : {}),
 });
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {

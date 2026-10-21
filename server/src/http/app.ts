@@ -1,11 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
 import { createReadStream } from "node:fs";
 import multipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import { z } from "zod";
 import type { Numbered } from "../cases/events.js";
-import { type CaseManager, HttpError } from "../cases/manager.js";
-import { type CaseState, caseCost, Confirmation } from "../cases/state.js";
+import { type CaseManager, HttpError, type Live } from "../cases/manager.js";
+import { caseCost, Confirmation } from "../cases/state.js";
 
 export interface AppOptions {
   manager: CaseManager;
@@ -16,16 +17,23 @@ export interface AppOptions {
   logger?: boolean;
   /** SSE keep-alive, so proxies and phones do not drop a quiet stream */
   heartbeatMs?: number;
+  /** the built web app (web/dist), served at / – any other path that is not /api gets its index.html */
+  webDir?: string;
 }
 
 const MAX_PHOTO_BYTES = 20 * 1024 * 1024;
 const MAX_PHOTOS = 80;
 
 /**
- * What the client gets for a case: the state, the derived total and the number of the last event –
- * a client that opens the stream with ?after=lastEventId gets only what happens from then on.
+ * What the client gets for a case: the state, the derived total, the work in progress and the number
+ * of the last event – a client that opens the stream with ?after=lastEventId gets only what follows.
  */
-const view = (s: CaseState, lastEventId = 0) => ({ ...s, costUsd: caseCost(s), lastEventId });
+const view = ({ state, events, progress, busy }: Live) => ({
+  ...state,
+  costUsd: caseCost(state),
+  lastEventId: events.lastId,
+  progress: busy ? progress : null,
+});
 
 const CreateBody = z.object({ expert: z.string().max(100).optional() }).default({});
 const MessageBody = z.object({ text: z.string().max(20_000).optional() }).default({});
@@ -70,17 +78,20 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   app.get("/api/health", async () => ({ ok: true, plugin: options.plugin }));
 
-  app.get("/api/cases", async () => (await manager.list()).map(view));
+  app.get("/api/cases", async () => {
+    const states = await manager.list();
+    return Promise.all(states.map(async (s) => view(await manager.get(s.id))));
+  });
 
   app.post("/api/cases", async (request, reply) => {
     const body = CreateBody.parse(request.body ?? {});
-    return reply.code(201).send(view(await manager.create(body.expert)));
+    const created = await manager.create(body.expert);
+    return reply.code(201).send(view(await manager.get(created.id)));
   });
 
   app.get("/api/cases/:id", async (request) => {
     const { id } = Params.parse(request.params);
-    const live = await manager.get(id);
-    return view(live.state, live.events.lastId);
+    return view(await manager.get(id));
   });
 
   app.post("/api/cases/:id/photos", async (request) => {
@@ -94,6 +105,18 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     return { saved, photos: (await manager.get(id)).state.photos };
   });
 
+  app.get("/api/cases/:id/photos/:name", async (request, reply) => {
+    const { id, name } = z.object({ id: z.string(), name: z.string() }).parse(request.params);
+    const path = await manager.photo(id, name);
+    const type = name.endsWith(".png") ? "image/png" : name.endsWith(".webp") ? "image/webp" : "image/jpeg";
+    return reply.type(type).header("cache-control", "private, max-age=86400").send(createReadStream(path));
+  });
+
+  app.delete("/api/cases/:id/photos/:name", async (request) => {
+    const { id, name } = z.object({ id: z.string(), name: z.string() }).parse(request.params);
+    return { photos: await manager.removePhoto(id, name) };
+  });
+
   app.post("/api/cases/:id/read", async (request, reply) => {
     const { id } = Params.parse(request.params);
     await manager.read(id);
@@ -102,7 +125,8 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   app.post("/api/cases/:id/confirm", async (request) => {
     const { id } = Params.parse(request.params);
-    return view(await manager.confirm(id, Confirmation.parse(request.body)));
+    await manager.confirm(id, Confirmation.parse(request.body));
+    return view(await manager.get(id));
   });
 
   app.post("/api/cases/:id/messages", async (request, reply) => {
@@ -153,7 +177,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     out.write("retry: 3000\n\n");
     const send = ({ id: n, event }: Numbered) => out.write(`id: ${n}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
     // the current state first, so a fresh client can draw the page before any event arrives
-    out.write(`event: snapshot\ndata: ${JSON.stringify(view(live.state, live.events.lastId))}\n\n`);
+    out.write(`event: snapshot\ndata: ${JSON.stringify(view(live))}\n\n`);
     const unsubscribe = live.events.subscribe(after, send);
     const heartbeat = setInterval(() => out.write(": ping\n\n"), options.heartbeatMs ?? 15_000);
     request.raw.on("close", () => {
@@ -161,6 +185,15 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       unsubscribe();
     });
   });
+
+  if (options.webDir) {
+    // wildcard: files are looked up per request, so a rebuilt app is served without a restart
+    await app.register(fastifyStatic, { root: options.webDir });
+    app.setNotFoundHandler((request, reply) => {
+      if (request.method !== "GET" || /^\/(api|assets)\//.test(request.url)) return reply.code(404).send({ error: "Not found" });
+      return reply.header("cache-control", "no-cache").sendFile("index.html");
+    });
+  }
 
   return app;
 }

@@ -30,6 +30,7 @@ const config: Config = {
   RUNS_DIR: "/app/runs",
   SANDBOX: "on",
   PROMPT_CACHE_TTL: "1h",
+  ENGINE: "claude",
   HOST: "127.0.0.1",
   PORT: 8787,
 };

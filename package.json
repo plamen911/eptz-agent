@@ -4,7 +4,8 @@
   "description": "Forensic fire-expert report (ЕПТЗ) agent on the Claude Agent SDK",
   "type": "module",
   "workspaces": [
-    "server"
+    "server",
+    "web"
   ],
   "engines": {
     "node": ">=22"
@@ -16,6 +17,8 @@
     "case": "npm run case --workspace server --",
     "turn": "npm run turn --workspace server --",
     "check:plugin": "npm run check:plugin --workspace server",
-    "serve": "npm run serve --workspace server"
+    "serve": "npm run serve --workspace server",
+    "dev:web": "npm run dev --workspace web",
+    "build": "npm run build --workspace web"
   }
 }

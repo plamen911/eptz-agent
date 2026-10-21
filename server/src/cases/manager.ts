@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync } from "node:fs";
-import { mkdir, readdir } from "node:fs/promises";
+import { mkdir, readdir, unlink } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
@@ -9,6 +9,7 @@ import type { Facts } from "../agent/prefetch.js";
 import type { Config } from "../config.js";
 import type { CostLog } from "../costLog.js";
 import { EventLog } from "./events.js";
+import { applyProgress, emptyProgress, type Progress } from "./progress.js";
 import { firstMessage } from "./firstMessage.js";
 import { CASE_ID, type CaseState, caseCost, type Confirmation, loadState, saveState } from "./state.js";
 
@@ -29,12 +30,20 @@ export class HttpError extends Error {
   }
 }
 
-interface Live {
+export interface Live {
   state: CaseState;
   events: EventLog;
   busy: boolean;
+  /** the running work so far – for a page opened in the middle of it */
+  progress: Progress;
   approvals: Map<string, (allowed: boolean) => void>;
   saving: Promise<void>;
+}
+
+function newLive(state: CaseState): Live {
+  const live: Live = { state, events: new EventLog(), busy: false, progress: emptyProgress(), approvals: new Map(), saving: Promise.resolve() };
+  live.events.subscribe(0, ({ event }) => (live.progress = applyProgress(live.progress, event)));
+  return live;
 }
 
 const IMAGE = /^\.(jpe?g|png|webp)$/i;
@@ -113,7 +122,7 @@ export class CaseManager {
       readCostUsd: 0,
       agentCostUsd: 0,
     };
-    const live: Live = { state, events: new EventLog(), busy: false, approvals: new Map(), saving: Promise.resolve() };
+    const live = newLive(state);
     this.live.set(id, live);
     await this.save(live);
     return state;
@@ -127,7 +136,7 @@ export class CaseManager {
     if (!state) throw new HttpError(404, "No such case");
     // work that was running when the server stopped is not running now
     if (state.status === "reading" || state.status === "writing") state.status = "interrupted";
-    const live: Live = { state, events: new EventLog(), busy: false, approvals: new Map(), saving: Promise.resolve() };
+    const live = newLive(state);
     this.live.set(id, live);
     return live;
   }
@@ -153,6 +162,26 @@ export class CaseManager {
     live.state.photos.push(name);
     await this.save(live);
     return name;
+  }
+
+  /** Removes an uploaded photo before the reading. */
+  async removePhoto(id: string, name: string): Promise<string[]> {
+    const live = await this.get(id);
+    if (!["new", "interrupted", "error"].includes(live.state.status) || live.busy || live.state.facts) {
+      throw new HttpError(409, "Photos can be removed only before the case is read");
+    }
+    if (!live.state.photos.includes(name)) throw new HttpError(404, "No such photo");
+    await unlink(join(this.photosDir(id), name)).catch(() => {});
+    live.state.photos = live.state.photos.filter((p) => p !== name);
+    await this.save(live);
+    return live.state.photos;
+  }
+
+  /** The path of an uploaded photo – only names the case lists. */
+  async photo(id: string, name: string): Promise<string> {
+    const live = await this.get(id);
+    if (!live.state.photos.includes(name)) throw new HttpError(404, "No such photo");
+    return join(this.photosDir(id), name);
   }
 
   /** Reads the photos in the background; progress and the result arrive as events. */

@@ -64,6 +64,27 @@ GET  /api/cases, /api/cases/:id, /api/health
 A real case through the API: 11 photos read in 26 s for $0.013, the report and the fee sheet
 written in 2 min 50 s for $0.49 – $0.50 for the case.
 
+## The app
+
+A React + TypeScript PWA in Bulgarian, served by the same server (`npm run build`, then
+`npm run serve`), installable on a phone's home screen.
+
+| Check the reading | The agent asks | Done |
+|---|---|---|
+| ![](docs/check.png) | ![](docs/approval.png) | ![](docs/done.png) |
+
+1. **Photos** from the camera or the gallery, shrunk to 2000 px on the phone before the upload
+   (the reader sees at most ~1600 px), with upload and reading progress.
+2. **Check**: the date, the place and every handwritten number next to its photo – the ones that
+   go into a conclusion (sizes, times, registration numbers) first, the rest folded away.
+3. **Writing**: the agent's text streams onto a sheet set in a document serif, its steps listed in
+   plain words, an approval card when it wants to send something.
+4. **Done**: the .docx and the .xlsx to download, the case's cost, a box for corrections.
+
+The live view folds the same events the server does (`server/src/cases/progress.ts` is shared), so
+a page opened mid-turn starts from what is already written. `ENGINE=demo` runs an invented case
+with no model calls – for trying the app and for the screenshots above.
+
 ## Keeping up with the skill
 
 The methodology lives in the fire-service plugin, which keeps improving. Every hour the
@@ -108,16 +129,17 @@ npm install
 npm run vendor:plugin           # fetches the fire-service plugin at the pinned commit
 cp .env.example .env            # add ANTHROPIC_API_KEY (and FIRE_SERVICE_KEY, if you have one)
 npm run case -- ./cases/my-case # in the terminal: a folder of JPEG/PNG/WebP photos
-npm run serve                   # or the web server on http://127.0.0.1:8787
+npm run build && npm run serve  # or the app and its API on http://127.0.0.1:8787
+npm run dev:web                 # the app with hot reload (API from npm run serve)
 npm test
 ```
 
 ## Plan
 
 0. Agent in the terminal: reader, writer, sandbox, approvals, cost log.
-1. Server: Fastify, a case API, SSE streaming of the agent's text and steps. ← here
+1. Server: Fastify, a case API, SSE streaming of the agent's text and steps.
 2. React + TypeScript PWA: upload from the camera with progress, confirm handwritten numbers,
-   approve actions, download the documents.
+   approve actions, download the documents. ← here
 3. Compaction: a `PreCompact` hook keeps a case dossier so the agent never asks twice.
 4. Production basics: retries and fallbacks end to end, per-case budget in the UI, metrics page.
 5. Evals in CI: reading accuracy on a fixed set of pages, report checks, a regression threshold.

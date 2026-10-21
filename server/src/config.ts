@@ -20,6 +20,8 @@ const Env = z.object({
   SANDBOX: z.enum(["on", "off"]).default("on"),
   // how long the agent's prompt cache lives: 5m is cheaper to write, 1h survives the expert's pauses
   PROMPT_CACHE_TTL: z.enum(["5m", "1h"]).default("5m"),
+  // claude: the real models; demo: an invented case, no model calls (trying the app, browser tests)
+  ENGINE: z.enum(["claude", "demo"]).default("claude"),
   // the web server
   HOST: z.string().default("127.0.0.1"),
   PORT: z.coerce.number().int().min(1).max(65535).default(8787),

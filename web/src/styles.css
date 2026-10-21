@@ -1,0 +1,637 @@
+/*
+ * Ash-grey paper, soot ink, fire-service red used only for what needs a hand: the next action
+ * and the stage you are in. The agent writes in a document serif on a sheet – the report taking
+ * shape is the one thing on screen allowed to look like more than an interface.
+ */
+:root {
+  --ash: #e6e7e3;
+  --sheet: #fbfbf8;
+  --soot: #23262a;
+  --smoke: #5f646b;
+  --rule: #c9cbc6;
+  --ember: #c4291c;
+  --ember-ink: #ffffff;
+  --amber: #8a5a00;
+  --amber-wash: #f6ead2;
+  --ok: #2f6b3f;
+
+  --ui: "Golos Text", system-ui, sans-serif;
+  --doc: "PT Serif", Georgia, serif;
+  --display: "Unbounded", "Golos Text", sans-serif;
+
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2.25rem;
+  --radius: 6px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ash: #17191c;
+    --sheet: #202327;
+    --soot: #e4e5e1;
+    --smoke: #a2a7ad;
+    --rule: #383c42;
+    --ember: #e5533f;
+    --ember-ink: #160604;
+    --amber: #e9b45c;
+    --amber-wash: #3a2d14;
+    --ok: #79c08b;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ash);
+  color: var(--soot);
+  font: 400 1rem/1.5 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.shell,
+.login {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 var(--s4) calc(var(--s6) + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: calc(var(--s4) + env(safe-area-inset-top)) 0 var(--s4);
+}
+
+.brand {
+  font: 700 1.1rem/1 var(--display);
+  color: var(--soot);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.back {
+  color: var(--smoke);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.display {
+  font: 700 clamp(1.6rem, 6vw, 2.4rem) / 1.1 var(--display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.18em;
+}
+
+.muted {
+  color: var(--smoke);
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.lede {
+  font-size: 1.1rem;
+  color: var(--smoke);
+  max-width: 32ch;
+}
+
+.stack,
+.stack-sm,
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+}
+
+.stack {
+  gap: var(--s4);
+}
+
+.stack-sm {
+  gap: var(--s2);
+}
+
+.stack-lg {
+  gap: var(--s6);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.grid-2 {
+  display: grid;
+  gap: var(--s4);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+/* Forms */
+
+label {
+  font-weight: 500;
+}
+
+input,
+textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--soot);
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s3);
+  min-height: 2.9rem;
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+input.changed {
+  border-color: var(--amber);
+  background: var(--amber-wash);
+}
+
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  padding: 0 var(--s5);
+  font: 500 1rem/1 var(--ui);
+  color: var(--soot);
+  background: transparent;
+  border: 1px solid var(--soot);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: var(--ember-ink);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ember);
+  outline-offset: 2px;
+}
+
+.error {
+  color: var(--ember);
+  font-weight: 500;
+}
+
+.warn {
+  color: var(--amber);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--ember);
+}
+
+/* Login and the case list */
+
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  padding-top: 18vh;
+}
+
+.new-case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding-top: var(--s4);
+}
+
+.new-case .display {
+  margin-bottom: var(--s3);
+}
+
+.case-list {
+  list-style: none;
+  margin: var(--s3) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.case-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s1) var(--s4);
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+}
+
+.case-title {
+  font-weight: 600;
+}
+
+.status {
+  justify-self: end;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-writing,
+.status-reading,
+.status-read {
+  color: var(--ember);
+}
+
+.status-error,
+.status-interrupted {
+  color: var(--amber);
+}
+
+/* The case */
+
+.case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+
+.case-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding-top: var(--s2);
+}
+
+/* The four stages are a real sequence – numbered, the current one in red. */
+.stages {
+  counter-reset: stage;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s2);
+  margin: var(--s2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--smoke);
+}
+
+.stages li {
+  counter-increment: stage;
+  padding-top: var(--s2);
+  border-top: 3px solid var(--rule);
+}
+
+.stages li::before {
+  content: counter(stage) " ";
+  font-variant-numeric: tabular-nums;
+}
+
+.stages .done {
+  border-top-color: var(--soot);
+  color: var(--soot);
+}
+
+.stages .current {
+  border-top-color: var(--ember);
+  color: var(--ember);
+  font-weight: 600;
+}
+
+/* Photos */
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumbs li {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-no {
+  position: absolute;
+  left: var(--s1);
+  bottom: var(--s1);
+  padding: 0 var(--s2);
+  border-radius: var(--radius);
+  background: var(--soot);
+  color: var(--sheet);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.thumb-remove {
+  position: absolute;
+  top: var(--s1);
+  right: var(--s1);
+  min-height: 2rem;
+  width: 2rem;
+  padding: 0;
+  background: var(--sheet);
+  border-color: var(--rule);
+  font-size: 1.2rem;
+}
+
+/* Confirmation */
+
+.numbers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.number-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  grid-template-areas:
+    "photo context"
+    "photo input"
+    "photo note";
+  gap: var(--s1) var(--s3);
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.number-photo {
+  grid-area: photo;
+}
+
+.number-photo img {
+  width: 3.5rem;
+  height: 4.6rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  display: block;
+}
+
+.number-context {
+  grid-area: context;
+  font-weight: 400;
+  color: var(--smoke);
+  font-size: 0.9rem;
+}
+
+.number-row input {
+  grid-area: input;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.number-row .small {
+  grid-area: note;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: var(--s3) 0;
+}
+
+/* The writing */
+
+.work {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.files {
+  display: grid;
+  gap: var(--s2);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.file {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--soot);
+  border-radius: var(--radius);
+  text-decoration: none;
+  background: var(--sheet);
+}
+
+.file-kind {
+  font-weight: 600;
+}
+
+.file-name {
+  font-size: 0.8rem;
+  color: var(--smoke);
+  overflow-wrap: anywhere;
+}
+
+.conversation {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.said-expert {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: var(--s3) var(--s4);
+  background: var(--soot);
+  color: var(--sheet);
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+}
+
+/* The sheet: the agent's words set like the report they become. */
+.sheet {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: var(--s5) var(--s5) var(--s5) calc(var(--s5) + 0.25rem);
+  font: 400 1.05rem/1.65 var(--doc);
+  max-width: 68ch;
+  box-shadow: 0 1px 0 var(--rule), 0 3px 0 -1px var(--sheet), 0 3px 0 0 var(--rule);
+}
+
+.sheet p + p,
+.sheet p + ul,
+.sheet p + ol,
+.sheet ul + p,
+.sheet ol + p {
+  margin-top: 0.8em;
+}
+
+.sheet h3 {
+  font: 700 1.05rem/1.4 var(--doc);
+  margin: 1em 0 0.4em;
+}
+
+.sheet ul,
+.sheet ol {
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.sheet code {
+  font-size: 0.9em;
+  background: var(--ash);
+  padding: 0 0.25em;
+  border-radius: 3px;
+}
+
+.live-text > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1.1em;
+  margin-left: 0.15em;
+  vertical-align: -0.15em;
+  background: var(--ember);
+  animation: caret 1s steps(2) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.sheet .steps {
+  list-style: none;
+  margin: 0 0 var(--s4);
+  padding: 0 0 var(--s3);
+  border-bottom: 1px dashed var(--rule);
+  font: 400 0.85rem/1.6 var(--ui);
+  color: var(--smoke);
+}
+
+.steps li::before {
+  content: "✓ ";
+  color: var(--ok);
+}
+
+.steps li.now::before {
+  content: "… ";
+  color: var(--ember);
+}
+
+.approval {
+  margin-top: var(--s4);
+  padding: var(--s4);
+  border: 2px solid var(--ember);
+  border-radius: var(--radius);
+  font: 400 1rem/1.5 var(--ui);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.approval pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  color: var(--smoke);
+}
+
+.composer {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s2);
+  align-items: end;
+  padding: var(--s3) 0 calc(var(--s3) + env(safe-area-inset-bottom));
+  background: var(--ash);
+  border-top: 1px solid var(--rule);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-text > :last-child::after {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

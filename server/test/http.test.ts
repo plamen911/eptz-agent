@@ -22,6 +22,7 @@ const config = {
   RUNS_DIR: runs,
   SANDBOX: "on",
   PROMPT_CACHE_TTL: "5m",
+  ENGINE: "claude",
   HOST: "127.0.0.1",
   PORT: 0,
 } satisfies Config;
