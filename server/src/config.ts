@@ -15,6 +15,9 @@ const Env = z.object({
   WRITER_FALLBACK_MODEL: z.string().default("claude-sonnet-5"),
   PLUGIN_DIR: z.string().default(resolve(ROOT, "vendor/fire-service")),
   RUNS_DIR: z.string().default(resolve(ROOT, "runs")),
+  // "off" only where the OS sandbox cannot work (e.g. behind an egress proxy it cannot chain to);
+  // the guard still limits the file tools, but Bash is then unconfined – never in production.
+  SANDBOX: z.enum(["on", "off"]).default("on"),
 });
 
 export type Config = z.infer<typeof Env>;

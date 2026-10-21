@@ -26,6 +26,7 @@ const config: Config = {
   WRITER_FALLBACK_MODEL: "claude-sonnet-5",
   PLUGIN_DIR: join(ROOT, "vendor/fire-service"),
   RUNS_DIR: join(ROOT, "runs"),
+  SANDBOX: "on",
 };
 const roots = { plugin: config.PLUGIN_DIR, caseDir: join(config.RUNS_DIR, "smoke") };
 const options = caseOptions(config, roots, { onMessage() {}, approve: async () => false });

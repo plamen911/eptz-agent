@@ -10,6 +10,7 @@ const config: Config = {
   WRITER_FALLBACK_MODEL: "claude-sonnet-5",
   PLUGIN_DIR: "/app/vendor/fire-service",
   RUNS_DIR: "/app/runs",
+  SANDBOX: "on",
 };
 const roots = { plugin: "/app/vendor/fire-service", caseDir: "/app/runs/case-1" };
 const hooks = { onMessage: () => {}, approve: async () => false };

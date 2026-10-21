@@ -107,7 +107,7 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
     mcpServers: {},
     strictMcpConfig: true,
     sandbox: {
-      enabled: true,
+      enabled: config.SANDBOX === "on",
       failIfUnavailable: true,
       autoAllowBashIfSandboxed: true,
       allowUnsandboxedCommands: false,
