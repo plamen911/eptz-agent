@@ -19,3 +19,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run check:plugin
+      - if: failure()
+        run: |
+          B=node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude
+          ls -l $B; file $B; ldd $B || true
+          $B --version || echo "exit $?"
+          ls node_modules/@anthropic-ai/
