@@ -21,6 +21,7 @@ const lock = Object.fromEntries(
 const config: Config = {
   ANTHROPIC_API_KEY: "sk-ant-smoke-test", // never used: the check stops before the first API call
   CASE_BUDGET_USD: 0.01,
+  PROMPT_CACHE_TTL: "5m",
   READER_MODEL: "claude-haiku-5-5",
   WRITER_MODEL: "claude-sonnet-5-5",
   WRITER_FALLBACK_MODEL: "claude-sonnet-5",

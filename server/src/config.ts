@@ -18,6 +18,8 @@ const Env = z.object({
   // "off" only where the OS sandbox cannot work (e.g. behind an egress proxy it cannot chain to);
   // the guard still limits the file tools, but Bash is then unconfined – never in production.
   SANDBOX: z.enum(["on", "off"]).default("on"),
+  // how long the agent's prompt cache lives: 5m is cheaper to write, 1h survives the expert's pauses
+  PROMPT_CACHE_TTL: z.enum(["5m", "1h"]).default("5m"),
 });
 
 export type Config = z.infer<typeof Env>;

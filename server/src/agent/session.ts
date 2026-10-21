@@ -120,8 +120,8 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
     hooks: { PreToolUse: [{ hooks: [guard] }] },
     canUseTool,
     includePartialMessages: true,
-    // the expert answers in minutes, not seconds – keep the cache across the pauses
-    settings: { promptCacheTtl: "1h" },
+    // 1h keeps the cache across the expert's pauses; 5m is cheaper to write when a case runs straight through
+    settings: { promptCacheTtl: config.PROMPT_CACHE_TTL },
     maxBudgetUsd: config.CASE_BUDGET_USD,
     maxTurns: 120,
     env,

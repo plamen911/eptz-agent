@@ -29,6 +29,7 @@ const config: Config = {
   PLUGIN_DIR: plugin,
   RUNS_DIR: "/app/runs",
   SANDBOX: "on",
+  PROMPT_CACHE_TTL: "1h",
 };
 const roots = { plugin, caseDir: "/app/runs/case-1" };
 const hooks = { onMessage: () => {}, approve: async () => false };
