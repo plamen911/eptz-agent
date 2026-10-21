@@ -20,6 +20,12 @@ const Env = z.object({
   SANDBOX: z.enum(["on", "off"]).default("on"),
   // how long the agent's prompt cache lives: 5m is cheaper to write, 1h survives the expert's pauses
   PROMPT_CACHE_TTL: z.enum(["5m", "1h"]).default("5m"),
+  // the web server
+  HOST: z.string().default("127.0.0.1"),
+  PORT: z.coerce.number().int().min(1).max(65535).default(8787),
+  // every /api request must carry it (Authorization: Bearer …, or ?token= for EventSource);
+  // without it the server only listens on localhost
+  APP_TOKEN: z.preprocess((v) => (v === "" ? undefined : v), z.string().min(24, "APP_TOKEN must be at least 24 characters").optional()),
 });
 
 export type Config = z.infer<typeof Env>;

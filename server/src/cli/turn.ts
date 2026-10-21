@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
-import { prefetch } from "../agent/prefetch.js";
+import { factsOfCase, prefetch } from "../agent/prefetch.js";
 import { startCase } from "../agent/session.js";
 import { loadConfig, ROOT } from "../config.js";
 import { CostLog } from "../costLog.js";
@@ -84,9 +84,10 @@ async function main() {
   let text = message ?? FIRST;
   if (!saved) {
     const started = Date.now();
-    const data = await prefetch(config, caseDir, client, log, caseId, expert);
-    process.stdout.write(`Данни за ${data.facts.fire_date}, ${data.facts.place} – ${((Date.now() - started) / 1000).toFixed(0)} s\n`);
-    text += `\n\n# Данни, събрани от приложението\n\n${data.text}`;
+    const facts = await factsOfCase(config, caseDir, client, log, caseId);
+    const data = await prefetch(config, caseDir, facts, expert);
+    process.stdout.write(`Данни за ${facts.fire_date}, ${facts.place} – ${((Date.now() - started) / 1000).toFixed(0)} s\n`);
+    text += `\n\n# Данни, събрани от приложението\n\n${data}`;
   }
   session.send(text);
   await session.done;

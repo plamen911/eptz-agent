@@ -30,6 +30,8 @@ const config: Config = {
   RUNS_DIR: "/app/runs",
   SANDBOX: "on",
   PROMPT_CACHE_TTL: "1h",
+  HOST: "127.0.0.1",
+  PORT: 8787,
 };
 const roots = { plugin, caseDir: "/app/runs/case-1" };
 const hooks = { onMessage: () => {}, approve: async () => false };

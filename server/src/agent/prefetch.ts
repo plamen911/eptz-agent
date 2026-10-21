@@ -88,26 +88,18 @@ async function inSkill(skillDir: string, command: string, env: Record<string, st
 
 const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
-export interface Prefetched {
-  facts: Facts;
-  text: string;
+/** The date and place of the fire from case_ingest.md in the case folder. */
+export async function factsOfCase(config: Config, caseDir: string, client: Anthropic, log: CostLog, caseId: string): Promise<Facts> {
+  const materials = await readFile(join(caseDir, "case_ingest.md"), "utf8");
+  return extractFacts(client, config.READER_MODEL, materials, caseId, log);
 }
 
 /**
- * Runs the skill's first command (its exact form from SKILL.md, with the skill folder given) and,
- * when the expert is someone else than the key's owner, looks him and the director up in the staff
- * list. Saves the result as prefetch.md in the case folder and returns it.
+ * Runs the skill's first command (its exact form from SKILL.md, with the skill folder given) for the
+ * fire's date and place and, when the expert is someone else than the key's owner, looks him and the
+ * director up in the staff list. Saves the result as prefetch.md in the case folder and returns it.
  */
-export async function prefetch(
-  config: Config,
-  caseDir: string,
-  client: Anthropic,
-  log: CostLog,
-  caseId: string,
-  expert?: string,
-): Promise<Prefetched> {
-  const materials = await readFile(join(caseDir, "case_ingest.md"), "utf8");
-  const facts = await extractFacts(client, config.READER_MODEL, materials, caseId, log);
+export async function prefetch(config: Config, caseDir: string, facts: Facts, expert?: string): Promise<string> {
   const skillDir = join(config.PLUGIN_DIR, "skills/eptz");
   const env = scriptEnv(config);
 
@@ -125,5 +117,5 @@ export async function prefetch(
   }
   const text = parts.join("\n\n");
   await writeFile(join(caseDir, "prefetch.md"), text);
-  return { facts, text };
+  return text;
 }
