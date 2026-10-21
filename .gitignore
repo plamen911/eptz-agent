@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+# the fire-service plugin is fetched by scripts/vendor-plugin.sh at the ref in plugin.lock
+vendor/
+# case files carry personal data – they never go into git
+cases/
+runs/
+*.log
+.DS_Store

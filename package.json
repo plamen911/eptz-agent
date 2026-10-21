@@ -1,0 +1,18 @@
+{
+  "name": "eptz-agent",
+  "private": true,
+  "description": "Forensic fire-expert report (ЕПТЗ) agent on the Claude Agent SDK",
+  "type": "module",
+  "workspaces": [
+    "server"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm test --workspaces",
+    "vendor:plugin": "bash scripts/vendor-plugin.sh",
+    "case": "npm run case --workspace server --"
+  }
+}
