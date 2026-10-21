@@ -59,6 +59,9 @@ export interface CaseSession {
   done: Promise<void>;
 }
 
+/** System variables the agent's process gets; the egress-proxy ones only matter where one is set. */
+export const PASSED_ENV = ["PATH", "HOME", "LANG", "TZ", "TMPDIR", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "SSL_CERT_FILE", "REQUESTS_CA_BUNDLE"];
+
 /** The SDK options for one case – exported so a test can check what the agent is allowed. */
 export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): Options {
   const guard: HookCallback = async (input) => {
@@ -87,7 +90,7 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
 
   // Only what the agent needs – not the whole environment of the server process.
   const env: Record<string, string> = { ANTHROPIC_API_KEY: config.ANTHROPIC_API_KEY };
-  for (const name of ["PATH", "HOME", "LANG", "TZ", "TMPDIR"]) {
+  for (const name of PASSED_ENV) {
     const value = process.env[name];
     if (value) env[name] = value;
   }

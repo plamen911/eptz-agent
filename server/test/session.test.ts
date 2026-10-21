@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { caseOptions } from "../src/agent/session.js";
+import { caseOptions, PASSED_ENV } from "../src/agent/session.js";
 import type { Config } from "../src/config.js";
 
 const config: Config = {
@@ -45,7 +45,7 @@ describe("caseOptions", () => {
   it("passes the agent only the variables it needs, and no MCP servers from the machine", () => {
     expect(options.env?.FIRE_SERVICE_KEY).toBeUndefined();
     expect(options.env?.ANTHROPIC_API_KEY).toBe("test");
-    expect(Object.keys(options.env ?? {}).every((k) => ["ANTHROPIC_API_KEY", "PATH", "HOME", "LANG", "TZ", "TMPDIR"].includes(k))).toBe(true);
+    expect(Object.keys(options.env ?? {}).every((k) => ["ANTHROPIC_API_KEY", ...PASSED_ENV].includes(k))).toBe(true);
     expect(options.strictMcpConfig).toBe(true);
     expect(options.mcpServers).toEqual({});
   });
