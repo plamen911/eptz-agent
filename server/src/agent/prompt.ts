@@ -39,11 +39,9 @@ export function systemPrompt(roots: Roots): string {
 - Готовите файлове (.docx, .xlsx) записвай в out/ в текущата папка – там, където скилът казва /mnt/user-data/outputs. SendUserFile и present_files няма: приложението само показва файловете от out/ за изтегляне, затова не изписвай пътищата им.
 - Не изпращай нищо по пощата и не записвай образци в базата без изрична молба на експерта – приложението ще поиска одобрението му.
 
-Как да работиш с малко ходове (всеки ход препрочита целия разговор):
-- Независимите команди и четения – в едно извикване на Bash (с ;). Чети само нужните раздели на дългите файлове (grep -n, после sed -n).
-- Не чети кода на скриптовете – полетата на meta.json и smetka.json са в примерите по-долу.
-- Напиши report.md веднъж, когато анализът е готов. После в едно извикване: build_eptz_docx.py и pregled.py. Поправките – наведнъж, с едно извикване.
-- Брой страници: HOME=$TMPDIR soffice -env:UserInstallation=file://$TMPDIR/lo --headless --convert-to pdf --outdir work/pdf out/ИМЕ.docx; после pdfinfo work/pdf/ИМЕ.pdf | grep Pages. Не ги отгатвай.
+Работи с малко ходове – по правилата на скила („Пести стъпките“). Тук още:
+- Полетата на meta.json и smetka.json са в справочните файлове по-долу – не ги търси в скриптовете.
+- Брой страници в това приложение (пясъчникът не дава писане в HOME): HOME=$TMPDIR soffice -env:UserInstallation=file://$TMPDIR/lo --headless --convert-to pdf --outdir work/pdf out/ИМЕ.docx; pdfinfo work/pdf/ИМЕ.pdf | grep Pages.
 - Пиши кратко в чата; дългият текст е в документа.
 
 ## Справочни файлове на скила
