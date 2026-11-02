@@ -98,9 +98,19 @@ to the pinned commit.
 
 - **Bash runs in the OS sandbox** (bubblewrap on Linux): it writes only in the case folder and
   reaches only the two data hosts (the n8n knowledge base and the METAR archive).
-- **A `PreToolUse` hook** keeps the file tools inside the case folder and the plugin, refuses
-  tools the app does not offer, and sends anything that leaves the app – e-mail, saving a report
-  as a template – to the expert for approval (`canUseTool`).
+- **A `PreToolUse` hook** keeps the file tools inside the case folder and the plugin and refuses
+  tools the app does not offer.
+- **Nothing leaves the app through Bash.** E-mail and saving a report as a template are the app's
+  own MCP tools (`send_email`, `save_template` in `server/src/agent/outward.ts`): each call goes to
+  the expert for approval (`canUseTool`), then the plugin's script runs in the server process with
+  fixed arguments – no shell, only files from the case folder. Bash calls to `poshta.py`,
+  `obraztsi.py zapis` or the n8n mail and template endpoints are refused, whatever the flags.
+- **Known gap:** the Bash refusal is a tripwire, not a boundary. While the agent's environment holds
+  the n8n key, a deliberately obfuscated command could still reach the n8n mail endpoint from the
+  sandbox. The fix is on the n8n side: accept mail and template writes only with a separate key that
+  the server keeps and the agent never gets. Until then, run the app with a personal (non-admin)
+  n8n key – it can only mail the key holder's own address.
+- **`SANDBOX=off` is local only.** The config refuses it unless the server listens on localhost.
 - **The agent gets a minimal environment**: the API key, the optional n8n key and a few system
   variables – not the server's environment – and no MCP servers from the machine.
 - **Case files never enter git.** `cases/` and `runs/` are ignored; the public demo uses an

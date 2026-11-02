@@ -27,12 +27,24 @@ describe("checkTool", () => {
     expect(checkTool("Edit", { file_path: "../case-2/report.md" }, roots).decision).toBe("deny");
   });
 
-  it("asks before anything leaves the app", () => {
-    const mail = checkTool("Bash", { command: "python3 _shared/scripts/poshta.py --do az --tema x a.docx" }, roots);
-    expect(mail.decision).toBe("ask");
-    const save = checkTool("Bash", { command: "python3 _shared/scripts/obraztsi.py zapis eptz r.md --obekt x" }, roots);
-    expect(save.decision).toBe("ask");
-    expect(checkTool("Bash", { command: "python3 _shared/scripts/poshta.py --do az a.docx --dry-run" }, roots).decision).toBe("allow");
+  it("sends and saves only through the app's tools, which ask the expert", () => {
+    expect(checkTool("mcp__eptz__send_email", { to: ["az"], subject: "x" }, roots).decision).toBe("ask");
+    expect(checkTool("mcp__eptz__save_template", { file: "r.md" }, roots).decision).toBe("ask");
+    expect(checkTool("mcp__other__send_email", {}, roots).decision).toBe("deny");
+  });
+
+  it("refuses the same actions in Bash, whatever the flags", () => {
+    for (const command of [
+      "python3 _shared/scripts/poshta.py --do az --tema x a.docx",
+      "python3 _shared/scripts/poshta.py --do evil@example.com a.docx --dry-run",
+      "echo --dry-run; python3 shared/scripts/poshta.py --do az a.docx",
+      "python3 _shared/scripts/obraztsi.py zapis eptz r.md --obekt x",
+      'python3 -c "import api_config; api_config.post(\'samples_url\', {})"',
+      'python3 -c "import api_config; api_config.request(\'mail_url\', {})"',
+    ]) {
+      expect(checkTool("Bash", { command }, roots).decision, command).toBe("deny");
+    }
+    expect(checkTool("Bash", { command: "python3 _shared/scripts/obraztsi.py get eptz a.md -o obraztsi" }, roots).decision).toBe("allow");
     expect(checkTool("Bash", { command: "python3 scripts/build_eptz_docx.py --content r.md --meta m.json" }, roots).decision).toBe("allow");
   });
 

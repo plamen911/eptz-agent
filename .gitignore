@@ -8,3 +8,5 @@ vendor/
 /runs/
 *.log
 .DS_Store
+.idea/
+.claude-transfer/

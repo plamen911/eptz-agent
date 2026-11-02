@@ -1,4 +1,5 @@
 import { isAbsolute, relative, resolve } from "node:path";
+import { OUTWARD_TOOLS } from "./outward.js";
 
 /**
  * What the agent may touch. The OS sandbox (bubblewrap on Linux) confines Bash – writes only in
@@ -14,10 +15,17 @@ export interface Roots {
 
 export type Decision = { decision: "allow" } | { decision: "deny"; reason: string } | { decision: "ask"; reason: string };
 
-/** Commands that send or publish something: they run only after the expert approves them. */
-export const OUTWARD: { pattern: RegExp; reason: string }[] = [
-  { pattern: /\bposhta\.py\b(?![^\n]*--dry-run)/, reason: "изпращане по и-мейл" },
-  { pattern: /\bobraztsi\.py\b[^\n]*\bzapis\b/, reason: "запис на образец в базата с одобрени експертизи" },
+/**
+ * Bash that would send or publish something. Leaving the app goes only through the app's own tools
+ * (outward.ts), which the expert approves; Bash calls to the same scripts or endpoints are refused,
+ * whatever their flags. This is a tripwire for the agent's ordinary mistakes, not a security
+ * boundary: a determined command can still reach n8n from the sandbox while the agent holds the key
+ * (see README, "Safety").
+ */
+export const OUTWARD_BASH: { pattern: RegExp; reason: string }[] = [
+  { pattern: /\bposhta\.py\b/, reason: "e-mail goes through the send_email tool, not Bash" },
+  { pattern: /\bobraztsi\.py\b[^\n]*\bzapis\b/, reason: "saving a template goes through the save_template tool, not Bash" },
+  { pattern: /\b(mail_url|samples_url)\b/, reason: "the n8n mail and template endpoints are reached only through the app's tools" },
 ];
 
 export function inside(root: string, path: string): boolean {
@@ -49,14 +57,15 @@ export function checkTool(tool: string, input: Record<string, unknown>, roots: R
     }
     case "Bash": {
       const command = typeof input.command === "string" ? input.command : "";
-      const outward = OUTWARD.find((o) => o.pattern.test(command));
-      if (outward) return { decision: "ask", reason: outward.reason };
+      const outward = OUTWARD_BASH.find((o) => o.pattern.test(command));
+      if (outward) return { decision: "deny", reason: outward.reason };
       return { decision: "allow" }; // confined by the sandbox
     }
     case "Skill":
       return { decision: "allow" };
     default:
-      // the agent's own MCP tools decide for themselves; anything else is not part of this app
+      // the app's own tools: the outward ones go to the expert, the rest only read
+      if (tool in OUTWARD_TOOLS) return { decision: "ask", reason: OUTWARD_TOOLS[tool] as string };
       if (tool.startsWith("mcp__eptz__")) return { decision: "allow" };
       return { decision: "deny", reason: `${tool} is not available in this app` };
   }

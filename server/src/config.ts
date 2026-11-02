@@ -32,12 +32,17 @@ const Env = z.object({
 
 export type Config = z.infer<typeof Env>;
 
+export const LOCAL_HOSTS = ["127.0.0.1", "localhost", "::1"];
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = Env.safeParse(env);
   if (!parsed.success) {
     throw new Error(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"));
   }
   const config = parsed.data;
+  if (config.SANDBOX === "off" && !LOCAL_HOSTS.includes(config.HOST)) {
+    throw new Error("SANDBOX=off leaves the agent's Bash unconfined – it is for local development only (HOST=127.0.0.1)");
+  }
   if (!existsSync(resolve(config.PLUGIN_DIR, ".claude-plugin/plugin.json"))) {
     throw new Error(`The fire-service plugin is missing in ${config.PLUGIN_DIR} – run: npm run vendor:plugin`);
   }
