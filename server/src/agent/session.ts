@@ -11,7 +11,6 @@ import {
 import type { Config } from "../config.js";
 import type { CostLog } from "../costLog.js";
 import { checkTool, type Roots } from "./guard.js";
-import { outwardServer } from "./outward.js";
 import { systemPrompt } from "./prompt.js";
 
 /** A queue the SDK reads the expert's messages from (streaming input mode). */
@@ -81,7 +80,7 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
 
   // reached only for calls the guard marked "ask" – everything else is decided before it
   const canUseTool: CanUseTool = async (toolName, input) => {
-    const detail = typeof input.command === "string" ? input.command : JSON.stringify(input, null, 1);
+    const detail = typeof input.command === "string" ? input.command : JSON.stringify(input);
     const verdict = checkTool(toolName, input, roots);
     const reason = verdict.decision === "ask" ? verdict.reason : toolName;
     return (await hooks.approve(reason, detail))
@@ -107,8 +106,8 @@ export function caseOptions(config: Config, roots: Roots, hooks: SessionHooks): 
     plugins: [{ type: "local", path: roots.plugin }],
     skills: ["fire-service:eptz"],
     tools: ["Skill", "Read", "Write", "Edit", "Glob", "Grep", "Bash"],
-    // no MCP servers from the machine's configuration – only the app's own (e-mail, templates)
-    mcpServers: { eptz: outwardServer(roots, env) },
+    // no MCP servers from the machine's configuration – only the ones this app registers
+    mcpServers: {},
     strictMcpConfig: true,
     sandbox: {
       enabled: config.SANDBOX === "on",

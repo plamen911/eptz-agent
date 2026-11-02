@@ -13,6 +13,5 @@ describe("loadConfig", () => {
   it("allows SANDBOX=off only on localhost", () => {
     expect(loadConfig({ ...base, SANDBOX: "off" }).SANDBOX).toBe("off");
     expect(() => loadConfig({ ...base, SANDBOX: "off", HOST: "0.0.0.0" })).toThrow(/SANDBOX=off/);
-    expect(loadConfig({ ...base, HOST: "0.0.0.0" }).HOST).toBe("0.0.0.0");
   });
 });

@@ -69,7 +69,7 @@ describe("caseOptions", () => {
     expect(options.env?.ANTHROPIC_API_KEY).toBe("test");
     expect(Object.keys(options.env ?? {}).every((k) => ["ANTHROPIC_API_KEY", ...PASSED_ENV].includes(k))).toBe(true);
     expect(options.strictMcpConfig).toBe(true);
-    expect(Object.keys(options.mcpServers ?? {})).toEqual(["eptz"]);
+    expect(options.mcpServers).toEqual({});
   });
 
   it("puts the skill files read in every case into the cached system prompt, from the vendored plugin", () => {

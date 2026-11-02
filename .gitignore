@@ -9,4 +9,3 @@ vendor/
 *.log
 .DS_Store
 .idea/
-.claude-transfer/

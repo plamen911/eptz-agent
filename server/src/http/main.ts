@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { demoEngine } from "../cases/demoEngine.js";
 import { claudeEngine } from "../cases/engine.js";
 import { CaseManager } from "../cases/manager.js";
-import { LOCAL_HOSTS, loadConfig, ROOT } from "../config.js";
+import { loadConfig, ROOT } from "../config.js";
 import { CostLog } from "../costLog.js";
 import { buildApp } from "./app.js";
 
@@ -14,7 +14,7 @@ const envFile = join(ROOT, ".env");
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 const config = loadConfig();
 
-if (!config.APP_TOKEN && !LOCAL_HOSTS.includes(config.HOST)) {
+if (!config.APP_TOKEN && !["127.0.0.1", "localhost", "::1"].includes(config.HOST)) {
   throw new Error("Set APP_TOKEN before listening on anything but localhost – every case spends API money");
 }
 
