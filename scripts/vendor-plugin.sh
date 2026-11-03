@@ -7,8 +7,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck disable=SC1091
-source <(grep -E '^(repo|ref)=' "$ROOT/plugin.lock")
+# eval, not source <(…): process substitution with source loads nothing in macOS's bash 3.2
+eval "$(grep -E '^(repo|ref)=' "$ROOT/plugin.lock")"
 REF="${1:-$ref}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

@@ -5,8 +5,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck disable=SC1091
-source <(grep -E '^(repo|ref|version)=' "$ROOT/plugin.lock")
+# eval, not source <(…): process substitution with source loads nothing in macOS's bash 3.2
+eval "$(grep -E '^(repo|ref|version)=' "$ROOT/plugin.lock")"
 latest="$(git ls-remote "$repo" refs/heads/main | cut -f1)"
 [ -n "$latest" ] || { echo "cannot read $repo" >&2; exit 1; }
 
