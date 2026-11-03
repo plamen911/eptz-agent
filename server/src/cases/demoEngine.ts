@@ -6,7 +6,8 @@ import type { Engine } from "./manager.js";
 /**
  * ENGINE=demo: the whole flow without a model call – for trying the app, for the browser tests
  * and for a public demo that costs nothing. Reading takes a moment per photo; the writing streams
- * an invented case's summary, shows its steps and asks one approval.
+ * an invented case's summary and shows its steps. No approval: the app sends nothing, and the demo
+ * shows only what the real agent does.
  */
 
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -57,7 +58,6 @@ export function demoEngine(stepMs = 250): Engine {
             tool("Bash", "python3 $D/scripts/build_eptz_docx.py meta.json report.md");
             await pause(stepMs * 2);
             tool("Bash", "python3 $D/scripts/pregled.py out/demo.docx");
-            await hooks.approve("изпращане по и-мейл", "python3 _shared/scripts/poshta.py --to expert@example.com out/demo.docx");
             for (const word of REPLY.split(/(?<=\s)/)) {
               emit({ type: "stream_event", event: { type: "content_block_delta", delta: { type: "text_delta", text: word } } });
               await pause(stepMs / 10);

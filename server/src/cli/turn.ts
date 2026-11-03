@@ -8,8 +8,9 @@
  * the session; later turns resume it from runs/<ID>/session.json. Before the first turn the app runs
  * the skill's first command and looks up --expert (when the expert is not the key's owner), so the
  * agent starts with that data instead of fetching it turn by turn. Without --message the first turn
- * asks the agent to start. --approve lets this turn send an e-mail or save a template if the
- * agent asks; otherwise such a request is refused and the agent is told so.
+ * asks the agent to start. --approve answers yes to an action that asks for the expert's approval;
+ * otherwise it is refused and the agent is told so. No action asks today – sending e-mail and saving
+ * templates are refused by the guard, with or without --approve.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

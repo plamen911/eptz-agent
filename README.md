@@ -7,8 +7,8 @@ It is built on the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/
 reuses the methodology of the [fire-service plugin](https://github.com/plamen911/fire-service-skills),
 which already produces court-ready reports inside Claude's apps.
 
-**Status:** step 0 – the agent runs from the terminal. The web app (React, SSE streaming,
-approvals in the UI) is next. See [the plan](#plan).
+**Status:** step 2 – the agent runs from the terminal or from a React PWA on a Fastify server.
+Compaction is next. See [the plan](#plan).
 
 ## How it works
 
@@ -54,8 +54,9 @@ GET  /api/cases, /api/cases/:id, /api/health
   new cache write).
 - **One turn per message, resumable.** Each message runs one agent turn and saves the SDK session
   id; the next message resumes it. A restart mid-turn leaves the case `interrupted`, never stuck.
-- **Approvals over HTTP.** When the agent wants to send an e-mail or save a template, the server
-  emits an `approval` event and waits for the expert's answer (refused after 15 minutes).
+- **Approvals over HTTP, for later.** An action marked for approval makes the server emit an
+  `approval` event and wait for the expert's answer (refused after 15 minutes). No action is
+  marked today: sending e-mail and saving templates are refused ([Safety](#safety)).
 - **Budget per case**, across turns: reading and writing are counted together; a case over
   `CASE_BUDGET_USD` takes no more messages.
 - `APP_TOKEN` guards every `/api` route (bearer header, or `?token=` for `EventSource`); without it
@@ -69,16 +70,16 @@ written in 2 min 50 s for $0.49 – $0.50 for the case.
 A React + TypeScript PWA in Bulgarian, served by the same server (`npm run build`, then
 `npm run serve`), installable on a phone's home screen.
 
-| Check the reading | The agent asks | Done |
-|---|---|---|
-| ![](docs/check.png) | ![](docs/approval.png) | ![](docs/done.png) |
+| Check the reading | Done |
+|---|---|
+| ![](docs/check.png) | ![](docs/done.png) |
 
 1. **Photos** from the camera or the gallery, shrunk to 2000 px on the phone before the upload
    (the reader sees at most ~1600 px), with upload and reading progress.
 2. **Check**: the date, the place and every handwritten number next to its photo – the ones that
    go into a conclusion (sizes, times, registration numbers) first, the rest folded away.
 3. **Writing**: the agent's text streams onto a sheet set in a document serif, its steps listed in
-   plain words, an approval card when it wants to send something.
+   plain words.
 4. **Done**: the .docx and the .xlsx to download, the case's cost, a box for corrections.
 
 The live view folds the same events the server does (`server/src/cases/progress.ts` is shared), so
