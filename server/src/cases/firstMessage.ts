@@ -23,7 +23,7 @@ export function firstMessage(state: Pick<CaseState, "expert">, confirmed: Confir
   }
   if (confirmed.notes.trim()) lines.push("", "Бележки на експерта:", confirmed.notes.trim());
   if (text?.trim()) lines.push("", text.trim());
-  lines.push("", "Генерирай заключението и сметката направо, без да питаш за съгласие.");
+  lines.push("", "Генерирай заключението направо, без да питаш за съгласие; сметката – след като експертът даде броя страници.");
   lines.push("", "# Данни, събрани от приложението", "", prefetched);
   return lines.join("\n");
 }

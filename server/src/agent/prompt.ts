@@ -41,7 +41,7 @@ export function systemPrompt(roots: Roots): string {
 
 Работи с малко ходове – по правилата на скила („Пести стъпките“). Тук още:
 - Полетата на meta.json и smetka.json са в справочните файлове по-долу – не ги търси в скриптовете.
-- Брой страници в това приложение (пясъчникът не дава писане в HOME): HOME=$TMPDIR soffice -env:UserInstallation=file://$TMPDIR/lo --headless --convert-to pdf --outdir work/pdf out/ИМЕ.docx; pdfinfo work/pdf/ИМЕ.pdf | grep Pages.
+- Брой страници: тук няма LibreOffice – не ги отгатвай и не търси друг начин. Предай .docx, помоли експерта да го отвори в Word и да напише броя страници, и направи сметката, когато го получиш.
 - Пиши кратко в чата; дългият текст е в документа.
 
 ## Справочни файлове на скила
