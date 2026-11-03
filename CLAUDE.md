@@ -50,3 +50,9 @@ There is no linter. CI runs `vendor:plugin`, `typecheck`, `test`, `build`, `chec
 - **Cache-sensitive flow.** The expert confirms facts before the agent starts so it can write the whole report in one turn; a pause past the cache TTL costs a new cache write. Avoid changes that make the agent stop and ask, or that vary the system prompt between cases.
 - **Case data never enters git.** `cases/` and `runs/` hold personal data and are ignored. Demos and fixtures use invented cases.
 - **Exposure rules in config:** `SANDBOX=off` is refused unless `HOST` is localhost, and `http/main.ts` refuses a non-localhost `HOST` without `APP_TOKEN`.
+
+## Production
+
+The app runs on the fire-expert.uk box (`deploy@46.224.114.108`) as the systemd service `eptz-agent`, deployed with `scripts/deploy.sh`. These settings live only on the server:
+
+- **`/etc/hosts` has `172.18.0.5 n8n.fire-expert.uk`.** The agent's sandbox refuses a domain that resolves to one of the host's own addresses, and n8n runs on this same box, so the name points at the `laravel_rag_nginx` container instead. Without the line, the skill's scripts fail inside the sandbox with `N8N_UNAVAILABLE ... 403 Forbidden`. The address can change when that container is recreated; if it does, update the line with `docker inspect laravel_rag_nginx --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`.
