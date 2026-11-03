@@ -75,14 +75,24 @@ function scriptEnv(config: Config): Record<string, string> {
   return env;
 }
 
+/** The skill's first command can wait on slow weather archives, one station after another. */
+const SCRIPT_TIMEOUT_MS = 5 * 60_000;
+
+/** A failed command as text: why it stopped, then whatever it had printed by then. */
+export function failureText(e: { code?: number | string; killed?: boolean; stdout?: string; stderr?: string; message: string }): string {
+  const output = (e.stdout ?? "") + (e.stderr ?? "");
+  if (typeof e.code === "string") return `ГРЕШКА: ${e.message}\n${output}`.trim();
+  if (e.killed) return `ГРЕШКА: командата е спряна след ${SCRIPT_TIMEOUT_MS / 60_000} минути.\n${output}`.trim();
+  return `ГРЕШКА: ${output || e.message}`.trim();
+}
+
 /** Runs a shell command in the skill folder; a failure is returned as text, for the agent to see. */
 async function inSkill(skillDir: string, command: string, env: Record<string, string>): Promise<string> {
   try {
-    const { stdout, stderr } = await run("bash", ["-c", command], { cwd: skillDir, env, timeout: 120_000, maxBuffer: 4 << 20 });
+    const { stdout, stderr } = await run("bash", ["-c", command], { cwd: skillDir, env, timeout: SCRIPT_TIMEOUT_MS, maxBuffer: 4 << 20 });
     return (stdout + (stderr ? `\n${stderr}` : "")).trim();
   } catch (error) {
-    const e = error as { stdout?: string; stderr?: string; message: string };
-    return `ГРЕШКА: ${(e.stdout ?? "") + (e.stderr ?? "") || e.message}`.trim();
+    return failureText(error as Parameters<typeof failureText>[0]);
   }
 }
 
